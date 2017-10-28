@@ -1,0 +1,7 @@
+# Backup files
+*.blend?
+*.blend??
+
+# Exported printing files
+*.stl
+*.gcode

@@ -31,15 +31,11 @@
 #ifndef _GLIBCXX_BITS_UNIFORM_INT_DIST_H
 #define _GLIBCXX_BITS_UNIFORM_INT_DIST_H
 
-#include <type_traits>
-#include <limits>
-
-namespace std _GLIBCXX_VISIBILITY(default)
+namespace std
 {
 
   namespace __detail
   {
-_GLIBCXX_BEGIN_NAMESPACE_VERSION
     /* Determine whether number is a power of 2.  */
     template<typename _Tp>
       inline bool
@@ -47,21 +43,16 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
       {
 	return ((__x - 1) & __x) == 0;
       };
-_GLIBCXX_END_NAMESPACE_VERSION
   }
-
-_GLIBCXX_BEGIN_NAMESPACE_VERSION
 
   /**
    * @brief Uniform discrete distribution for random numbers.
    * A discrete random distribution on the range @f$[min, max]@f$ with equal
    * probability throughout the range.
    */
-  template<typename _IntType = int>
+  template<typename _IntType = uint8_t>
     class uniform_int_distribution
     {
-      static_assert(std::is_integral<_IntType>::value,
-		    "template argument must be an integral type");
 
     public:
       /** The type of the range of the distribution. */
@@ -72,12 +63,10 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
 	typedef uniform_int_distribution<_IntType> distribution_type;
 
 	explicit
-	param_type(_IntType __a = 0,
-		   _IntType __b = std::numeric_limits<_IntType>::max())
+	param_type(_IntType __a,
+		   _IntType __b)
 	: _M_a(__a), _M_b(__b)
-	{
-	  __glibcxx_assert(_M_a <= _M_b);
-	}
+	{}
 
 	result_type
 	a() const
@@ -105,8 +94,8 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
        * @brief Constructs a uniform distribution object.
        */
       explicit
-      uniform_int_distribution(_IntType __a = 0,
-			   _IntType __b = std::numeric_limits<_IntType>::max())
+      uniform_int_distribution(_IntType __a,
+			   _IntType __b)
       : _M_param(__a, __b)
       { }
 
@@ -222,11 +211,9 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
       operator()(_UniformRandomNumberGenerator& __urng,
 		 const param_type& __param)
       {
-	typedef typename _UniformRandomNumberGenerator::result_type
-	  _Gresult_type;
-	typedef typename std::make_unsigned<result_type>::type __utype;
-	typedef typename std::common_type<_Gresult_type, __utype>::type
-	  __uctype;
+	typedef uint8_t _Gresult_type;
+	typedef uint8_t __utype;
+	typedef uint8_t __uctype;
 
 	const __uctype __urngmin = __urng.min();
 	const __uctype __urngmax = __urng.max();
@@ -290,12 +277,9 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
 		      _UniformRandomNumberGenerator& __urng,
 		      const param_type& __param)
       {
-	__glibcxx_function_requires(_ForwardIteratorConcept<_ForwardIterator>)
-	typedef typename _UniformRandomNumberGenerator::result_type
-	  _Gresult_type;
-	typedef typename std::make_unsigned<result_type>::type __utype;
-	typedef typename std::common_type<_Gresult_type, __utype>::type
-	  __uctype;
+	typedef uint8_t _Gresult_type;
+	typedef uint8_t __utype;
+	typedef uint8_t __uctype;
 
 	const __uctype __urngmin = __urng.min();
 	const __uctype __urngmax = __urng.max();
@@ -368,8 +352,6 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
       }
 
   // operator!= and operator<< and operator>> are defined in <bits/random.h>
-
-_GLIBCXX_END_NAMESPACE_VERSION
 } // namespace std
 
 #endif

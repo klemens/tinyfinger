@@ -2,6 +2,7 @@
 #undef min
 #undef max
 
+#include "button.h"
 #include "debounce.h"
 #include "lcg_rng.h"
 #include "segment.h"

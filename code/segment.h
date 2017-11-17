@@ -28,7 +28,11 @@ public:
     void set(uint8_t number) {
         uint8_t num = constrain(number, 0, 99);
         this->number[0] = pgm_read_byte_near(DECODER + num % 10);
-        this->number[1] = pgm_read_byte_near(DECODER + num / 10);
+        if(num / 10 >= 1) {
+            this->number[1] = pgm_read_byte_near(DECODER + num / 10);
+        } else {
+            this->number[1] = pgm_read_byte_near(DECODER + 10);
+        }
     }
 
     void setOff() {

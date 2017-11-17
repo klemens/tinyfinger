@@ -36,6 +36,11 @@ public:
         number[1] = 0xFF;
     }
 
+    void setDash() {
+        number[0] = pgm_read_byte_near(DECODER + 11);
+        number[1] = pgm_read_byte_near(DECODER + 11);
+    }
+
     void write() {
         shiftOut(PIN_SER, PIN_SCLK, LSBFIRST, number[0]);
         shiftOut(PIN_SER, PIN_SCLK, LSBFIRST, number[1]);

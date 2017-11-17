@@ -1,9 +1,15 @@
 #ifndef _DEBOUNCE_H_
 #define _DEBOUNCE_H_
 
+
+enum class RawButtonEvent : uint8_t {
+    NoEvent,
+    Pressed,
+    Released,
+};
+
 template<uint8_t DEBOUNCE_PRESSED, uint8_t DEBOUNCE_UNPRESSED = DEBOUNCE_PRESSED>
 class Debounce {
-
     public:
         enum class State : uint8_t {
             Unpressed,
@@ -12,19 +18,14 @@ class Debounce {
             PressedDebounced,
         };
 
-        enum class Result : uint8_t {
-            NoEvent,
-            Pressed,
-            Released,
-        };
 
-        Result event(bool pressed) {
+        RawButtonEvent event(bool pressed) {
             switch(state) {
                 case State::Unpressed :
                     if(pressed) {
                         state = State::PressedDebounced;
                         counter = millis();
-                        return Result::Pressed;
+                        return RawButtonEvent::Pressed;
                     }
                     break;
                 case State::PressedDebounced :
@@ -36,7 +37,7 @@ class Debounce {
                     if(!pressed) {
                         state = State::UnpressedDebounced;
                         counter = millis();
-                        return Result::Released;
+                        return RawButtonEvent::Released;
                     }
                     break;
                 case State::UnpressedDebounced :
@@ -46,9 +47,9 @@ class Debounce {
                     break;
             }
 
-            return Result::NoEvent;
+            return RawButtonEvent::NoEvent;
         }
-    
+
     private:
         State state = State::Unpressed;
         uint8_t counter = 0;

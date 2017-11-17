@@ -1,13 +1,18 @@
 #include "debounce.h"
 
-template<uint16_t SLEEP_TIMEOUT, uint16_t LONGPRESS_TIMEOUT, uint16_t DOUBLEPRESS_TIMEOUT>
+
+enum class ButtonEvent : uint8_t {
+    NoEvent,
+    Press,
+    LongPress,
+    DoublePress,
+};
+
+// template wird komplett wegoptimiert (wie #define)
+template<uint16_t LONGPRESS_TIMEOUT, uint16_t DOUBLEPRESS_TIMEOUT>
 class Button {
-
-    using DResult = Debounce<0>::Result;
-
     public:
         enum class State : uint8_t {
-            Sleep,
             Idle,
             Pressed,
             LongPressed,
@@ -15,64 +20,51 @@ class Button {
             DoublePressed,
         };
 
-        enum class Result : uint8_t {
-            NoEvent,
-            Press,
-            LongPress,
-            DoublePress,
-        };
 
-        Result event(DResult result) {
+        ButtonEvent event(RawButtonEvent result) {
             switch(state) {
-                case State::Sleep :
-                    state = State::Idle;
-                    counter = millis();
-                    break;
                 case State::Idle :
-                    if(result == DResult::Pressed) {
+                    if(result == RawButtonEvent::Pressed) {
                         state = State::Pressed;
                         counter = millis();
-                    } else if(millis() - counter >= SLEEP_TIMEOUT) {
-                        state = State::Sleep;
-                        // Activate Hardware sleep
                     }
                     break;
                 case State::Pressed :
-                    if(result == DResult::Released) {
+                    if(result == RawButtonEvent::Released) {
                         state = State::Released;
                         counter = millis();
                     } else if(millis() - counter >= LONGPRESS_TIMEOUT) {
                         state = State::LongPressed;
-                        return Result::LongPress;
+                        return ButtonEvent::LongPress;
                     }
                     break;
                 case State::Released :
-                    if(result == DResult::Pressed) {
+                    if(result == RawButtonEvent::Pressed) {
                         state = State::DoublePressed;
                     } else if(millis() - counter >= DOUBLEPRESS_TIMEOUT) {
                         state = State::Idle;
                         counter = millis();
-                        return Result::Press;
+                        return ButtonEvent::Press;
                     }
                     break;
                 case State::LongPressed :
-                    if(result == DResult::Released) {
+                    if(result == RawButtonEvent::Released) {
                         state = State::Idle;
                         counter = millis();
                     } else {
-                        return Result::LongPress;
+                        return ButtonEvent::LongPress;
                     }
                     break;
                 case State::DoublePressed :
-                    if(result == DResult::Released) {
+                    if(result == RawButtonEvent::Released) {
                         state = State::Idle;
                         counter = millis();
-                        return Result::DoublePress;
+                        return ButtonEvent::DoublePress;
                     }
                     break;
             }
 
-            return Result::NoEvent;
+            return ButtonEvent::NoEvent;
         }
 
     private:

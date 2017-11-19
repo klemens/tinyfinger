@@ -22,7 +22,6 @@ public:
         pinMode(PIN_SER, OUTPUT);
         pinMode(PIN_SCLK, OUTPUT);
         pinMode(PIN_RCLK, OUTPUT);
-        setOff();
     }
 
     void set(uint8_t number) {

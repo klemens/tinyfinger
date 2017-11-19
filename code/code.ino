@@ -6,14 +6,12 @@
 #include "debounce.h"
 #include "lcg_rng.h"
 #include "segment.h"
-#include "uniform_int_dist.h"
 
 
 #define BUTTON_PIN 1
 #define DISPLAY_ENABLE 3
 
 lcg_rng rng;
-std::uniform_int_distribution<uint8_t> distribution(1,16);
 
 SegmentDisplay<4, 2, 0> display;
 
@@ -92,10 +90,24 @@ void loop() {
     }
 }
 
+// adapted from GNU ISO C++ uniform_int_distribution
+uint8_t distribute(const uint8_t lower, const uint8_t upper) {
+    const uint8_t range = (upper - lower) + 1;
+
+    const uint8_t scaling = 255 / range;
+    const uint8_t past = range * scaling;
+
+    uint8_t ret;
+    do {
+        ret = rng();
+    } while (ret >= past);
+
+    return ret / scaling + lower;
+}
+
 static uint8_t currentNumber;
 void displayNextNumber() {
-    currentNumber = distribution(rng);
-    //currentNumber = rng();
+    currentNumber = distribute(1,16);
     display.set(currentNumber);
     display.write();
 }

@@ -56,8 +56,7 @@ void loop() {
     rng();
 
     bool buttonPressed = !digitalRead(PIN1);
-    //auto event = button.event(debounce.event(buttonPressed));
-    auto event = ButtonEvent::NoEvent;
+    auto event = button.event(debounce.event(buttonPressed));
 
     switch(state) {
         case State::Idle:

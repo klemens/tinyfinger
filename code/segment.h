@@ -52,5 +52,15 @@ public:
         delay(1);
         digitalWrite(PIN_RCLK, LOW);
     }
+
+    void setDP(bool on) {
+        if(on) {
+            number[0] &= 0x7F;
+            number[1] &= 0x7F;
+        } else {
+            number[0] |= 0x80;
+            number[1] |= 0x80;
+        }
+    }
 };
 

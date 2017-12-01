@@ -22,6 +22,9 @@ using MainButton = Button<150, 150>;
 Debounce<20> debounce;
 MainButton button;
 
+bool activeGroups[16] = { false };
+uint8_t activeCount = 0;
+
 #define NUM_SLOWDOWN 12
 const uint16_t PROGMEM SLOWDOWN[NUM_SLOWDOWN] = {
     35, 32,
@@ -40,6 +43,8 @@ void setup() {
 
     display.setDash();
     display.write();
+
+    resetGroups();
 }
 
 enum class State : uint8_t {
@@ -70,14 +75,17 @@ void loop() {
             }
             break;
         case State::Menu:
-            // TODO
+            displayMenu();
+            display.setDash();
+            display.write();
             state = State::Idle;
             break;
         case State::Counting:
             if(event == ButtonEvent::LongPress) {
                 // stay in this state
-                if((uint16_t) millis() - timeout >= 32) {
-                    displayNextNumber();
+                if((uint16_t) millis() - timeout >= 25) {
+                    display.set(generateNextNumber());
+                    display.write();
                     timeout = millis();
                 }
             } else {
@@ -91,17 +99,28 @@ void loop() {
     }
 }
 
-static uint8_t currentNumber;
-void displayNextNumber() {
-    currentNumber = distribution(rng);
-    display.set(currentNumber);
-    display.write();
+uint8_t generateNextNumber() {
+    uint8_t randomNumber = distribution(rng);
+
+    uint8_t i;
+    for(i = 0; i < 16 && randomNumber != 0; i += 1) {
+        if(activeGroups[i]) {
+            randomNumber -= 1;
+        }
+    }
+
+    // already offset by 1 because of the loop postincrement
+    return i;
 }
 
 void slowdown() {
+    uint8_t currentNumber;
+
     for(size_t i = 0; i < NUM_SLOWDOWN; i += 2) {
         for(size_t j = 0; j < pgm_read_word_near(SLOWDOWN + i); ++j) {
-            displayNextNumber();
+            currentNumber = generateNextNumber();
+            display.set(currentNumber);
+            display.write();
             delay(pgm_read_word_near(SLOWDOWN + i + 1));
         }
     }
@@ -116,3 +135,52 @@ void slowdown() {
     }
 }
 
+void resetGroups() {
+    for(uint8_t i = 0; i < 16; i += 1) {
+        activeGroups[i] = true;
+        activeCount += 1;
+    }
+}
+
+void displayMenu() {
+    uint8_t currentGroup = 0;
+    uint16_t timeout = millis();
+
+    constexpr uint16_t longPressDelay = 300;
+    Button<longPressDelay, 150> menuButton;
+
+    for(;;) {
+        bool buttonPressed = !digitalRead(PIN1);
+        auto event = menuButton.event(debounce.event(buttonPressed));
+
+        display.set(currentGroup + 1);
+        display.setDP(activeGroups[currentGroup]);
+        display.write();
+
+        switch(event) {
+            case ButtonEvent::LongPress:
+                // rotate through groups
+                if((uint16_t) millis() - timeout >= longPressDelay) {
+                    currentGroup = (currentGroup + 1) % 16;
+                    timeout = millis();
+                }
+                break;
+            case ButtonEvent::Press:
+                // (de)activate group
+                activeGroups[currentGroup] = !activeGroups[currentGroup];
+                break;
+            case ButtonEvent::DoublePress:
+                // exit menu
+                activeCount = 0;
+                for(uint8_t i = 0; i < 16; i += 1) {
+                    activeCount += (uint8_t) activeGroups[i];
+                }
+                if(activeCount == 0) {
+                    resetGroups();
+                }
+
+                distribution = std::uniform_int_distribution<uint8_t>(1,activeCount);
+                return;
+        }
+    }
+}

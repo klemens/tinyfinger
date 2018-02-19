@@ -48,6 +48,7 @@ void setup() {
 }
 
 enum class State : uint8_t {
+    Sleep,
     Idle,
     Menu,
     Counting,
@@ -64,6 +65,12 @@ void loop() {
     auto event = button.event(debounce.event(buttonPressed));
 
     switch(state) {
+        case State::Sleep:
+            if(buttonPressed) {
+                digitalWrite(DISPLAY_ENABLE, 0);
+                state = State::Idle;
+                timeout = millis();
+            }
         case State::Idle:
             if(event == ButtonEvent::Press) {
                 state = State::Slowing;
@@ -72,6 +79,9 @@ void loop() {
                 timeout = millis();
             } else if(event == ButtonEvent::DoublePress) {
                 state = State::Menu;
+            } else if((uint16_t) millis() - timeout >= 10000) {
+                digitalWrite(DISPLAY_ENABLE, 1);
+                state = State::Sleep;
             }
             break;
         case State::Menu:
@@ -79,6 +89,7 @@ void loop() {
             display.setDash();
             display.write();
             state = State::Idle;
+            timeout = millis();
             break;
         case State::Counting:
             if(event == ButtonEvent::LongPress) {
@@ -95,6 +106,7 @@ void loop() {
         case State::Slowing:
             slowdown();
             state = State::Idle;
+            timeout = millis();
             break;
     }
 }

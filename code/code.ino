@@ -2,6 +2,9 @@
 #undef min
 #undef max
 
+#include <avr/sleep.h>
+#include <avr/interrupt.h>
+
 #include "button.h"
 #include "debounce.h"
 #include "lcg_rng.h"
@@ -47,6 +50,52 @@ void setup() {
     resetGroups();
 }
 
+//ISR(PCINT0_vect) {
+//    digitalWrite(DISPLAY_ENABLE, 0);
+//}
+
+void enterSandman2() {
+    digitalWrite(DISPLAY_ENABLE, 1);
+    GIMSK |= _BV(PCIE); // Enable Pin Change Interrupts
+    PCMSK |= _BV(PCINT2); // Use PB2 as interrupt pin
+    ADCSRA &= ~_BV(ADEN); // ADC off
+    MCUCR |= _BV(SM1); MCUCR &= ~_BV(SM0); // Select "Power-down" sleep mode
+
+    sleep_enable(); // Sets the Sleep Enable bit
+    sei(); // Enable interrupts
+
+    sleep_cpu(); // SLEEP
+
+    cli(); // Disable interrupts
+    sleep_disable(); // Clear SE bit
+    ADCSRA |= _BV(ADEN); // ADC on
+    digitalWrite(DISPLAY_ENABLE, 0);
+}
+
+void enterSandman() {
+    digitalWrite(DISPLAY_ENABLE, 1);
+    MCUCR &= ~_BV(ISC01); MCUCR &= ~_BV(ISC00); // The low level of INT0 generates an interrupt request.
+    ADCSRA &= ~_BV(ADEN); // ADC off
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+
+    sleep_enable(); // Enable sleep mode
+    GIMSK |= _BV(INT0); // Enable External Interrupt INT0
+
+    sei(); // Enable all interrupts
+    sleep_cpu(); // GO TO SLEEP
+
+    cli(); // Disable all interrupts
+    GIMSK &= ~_BV(INT0); // Disable External Interrupt INT0
+
+    sleep_disable(); // Disable sleep mode
+    ADCSRA |= _BV(ADEN); // ADC on
+
+    sei(); // Enable all interrupts
+    digitalWrite(DISPLAY_ENABLE, 0);
+}
+
+
+
 enum class State : uint8_t {
     Sleep,
     Idle,
@@ -82,6 +131,7 @@ void loop() {
             } else if((uint16_t) millis() - timeout >= 10000) {
                 digitalWrite(DISPLAY_ENABLE, 1);
                 state = State::Sleep;
+                //enterSandman2();
             }
             break;
         case State::Menu:

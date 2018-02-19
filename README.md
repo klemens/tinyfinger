@@ -17,7 +17,8 @@ for generating pseudorandom numbers and transforms them to the needed
 range using the gcc uniform_int_dist c++std implementation.
 
 Flashing the firmware can be done using a normal Arduino programmes as an
-ISP with the ArduinoISP example sketch included with the IDE.
+ISP with the ArduinoISP example sketch included with the IDE. The PINs on
+the board are from left to right: GND, MISO, VCC, SCK, MOSI, RESET.
 
 ## case
 
